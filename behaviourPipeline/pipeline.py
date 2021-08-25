@@ -1,5 +1,6 @@
 import os
 import joblib
+from numpy.core.fromnumeric import clip
 import ray
 import yaml
 import psutil
@@ -13,6 +14,7 @@ from joblib import Parallel, delayed
 from catboost import CatBoostClassifier
 from behaviourPipeline.preprocessing import filter_strain_data, trim_data
 from behaviourPipeline.features import extract_comb_feats, aggregate_features
+from behaviourPipeline.prediction import behaviour_clips, videomaker
 
 import logging
 logger = logging.getLogger(__name__)
@@ -167,7 +169,32 @@ class BehaviourPipeline:
         clf.fit(templates, clustering["soft_labels"])
         self.save_to_cache(clf, "classifier.sav")
         return clf
-        
+    
+    def create_example_videos(self, video_dirs: list, min_bout_len: int, n_examples: int, outdir: str):
+        clf = self.load("classifier.sav")
+        max_label = clf.classes_.max()
+
+        n = len(video_dirs) // (max_label + 1)
+        if n < 1: raise ValueError("need more videos to have at least one unique video per behaviour")
+        random.shuffle(video_dirs)
+
+        j = 0
+        for i in range(n, len(video_dirs), n):
+            clip_frames =  behaviour_clips(
+                j, 
+                video_dirs[i-n:i], 
+                min_bout_len, 
+                self.fps, 
+                n_examples, 
+                clf, 
+                self.stride_window,
+                self.bodyparts,
+                self.conf_threshold,
+                self.filter_thresh
+            )
+            videomaker(clip_frames, self.fps, os.path.join(outdir, f"behaviour_{j}.mp4"))
+            j += 1
+
     def save_to_cache(self, data, f):
         with open(os.path.join(self.base_dir, f), "wb") as fname:
             joblib.dump(data, fname)

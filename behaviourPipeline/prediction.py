@@ -1,7 +1,12 @@
 import os
 import cv2
 import h5py
+import random
 import numpy as np
+from collections import namedtuple
+
+from numpy.core.fromnumeric import clip
+from behaviourPipeline.pipeline import BehaviourPipeline
 from behaviourPipeline.data import process_h5py_data, bsoid_format
 from behaviourPipeline.preprocessing import likelihood_filter, trim_data
 from behaviourPipeline.features import extract_comb_feats, aggregate_features
@@ -66,5 +71,56 @@ def add_group_label_to_frame(frames, label):
     
     return frames
 
-def behaviour_clips(video_dir, min_bout_len, n_examples, outdir):
+def bouts_from_video(behaviour_idx, labels, min_bout_len, n_examples):
+    Bout = namedtuple("Bout", ["start", "end"])
+    labels = labels.astype("int")
+
+    i, locs = -1, []
+    while i < len(labels) - 1:
+        i += 1
+        
+        if i != behaviour_idx: continue
+        
+        j = i + 1
+        while j < len(labels) - 1 and labels[i] == labels[j]: j += 1
+        if j - i >= min_bout_len: locs.append(Bout(i, j-1))
     
+    locs.sort(key=lambda x: x.start - x.end)
+    return locs[:n_examples]
+
+def frames_for_bouts(video, locs):
+    locs.sort(key=lambda x: x.start)
+
+    video = cv2.VideoCapture(video)
+    fps = video.get(cv2.CAP_PROP_FPS)
+
+    idx, frames = 0, []
+    
+    success, image = video.read()  
+    while success:
+        if idx == locs[0].start:
+            while idx <= locs[0].end:
+                frames.append(image)
+                success, image = video.read()
+                idx += 1
+            for _ in range(fps): frames.append(np.zeros_like(image))
+            locs.pop(0)
+        else:
+            success, image = video.read()
+            idx += 1
+    
+    return frames
+                
+
+def behaviour_clips(behaviour_idx, video_dirs, min_bout_len, fps, n_examples, clf, stride_window, bodyparts, conf_threshold, filter_thresh):
+    min_bout_len = fps * min_bout_len // 1000
+    clip_frames = []
+    
+    for video_dir in video_dirs:
+        video_file = [os.path.join(video_dir, f) for f in os.listdir(video_dir) if f.endswith(".h5")][0]
+        labels = video_frame_predictions(video_file, clf, stride_window, bodyparts, fps, conf_threshold, filter_thresh)
+        locs = bouts_from_video(behaviour_idx, labels, min_bout_len, n_examples)
+        video_name = [os.path.join(video_dir, f) for f in os.listdir(video_dir) if f.endswith(".avi")][0]
+        clip_frames.append(frames_for_bouts(video_name, locs))
+    
+    return clip_frames
