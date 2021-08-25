@@ -35,6 +35,7 @@ class BehaviourPipeline:
         
         self.hdbscan_params = config["hdbscan_params"]
         self.umap_params    = config["umap_params"]
+        self.cluster_range  = config["cluster_range"]
 
         self.num_points     = config["num_points"]
         self.cluster_thresh = config["cluster_thresh"]
@@ -104,7 +105,7 @@ class BehaviourPipeline:
             num_points=self.num_points,
             umap_params=self.umap_params,
             hdbscan_params=self.hdbscan_params,
-            cluster_range=self.hdbscan_params["cluster_range"]
+            cluster_range=self.cluster_range
         )
 
         @ray.remote
@@ -154,7 +155,7 @@ class BehaviourPipeline:
             templates, 
             self.hdbscan_params, 
             self.umap_params, 
-            self.hdbscan_params["cluster_range"]
+            self.cluster_range
         )
 
         self.save_to_cache([templates, clustering], "dataset.sav")
