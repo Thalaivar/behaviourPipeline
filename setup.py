@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='behaviourPipeline',
-    version='0.1.2',
+    version='0.1.3',
     author='Dhruv Laad',
     author_email='dhruvlaad@gmail.com',
     packages=['behaviourPipeline'],

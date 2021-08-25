@@ -46,6 +46,8 @@ class BehaviourPipeline:
         except FileExistsError: pass
         
     def ingest_data(self, data_dir: str, records: pd.DataFrame, n: int, n_strains: int=-1, n_jobs: int=-1):
+        if self.exists("strains.sav"): return self.load("strains.sav")
+
         min_video_len = self.min_video_len * self.fps * 60
         
         n_jobs = min(n_jobs, psutil.cpu_count(logical=False))
@@ -81,6 +83,8 @@ class BehaviourPipeline:
         return filtered_data
 
     def compute_features(self, n_jobs: int=-1):
+        if self.exists("features.sav"): return self.load("features.sav")
+        
         n_jobs = min(n_jobs, psutil.cpu_count(logical=False))
 
         filtered_data = self.load("strains.sav")
@@ -101,6 +105,8 @@ class BehaviourPipeline:
         return feats
     
     def cluster_strainwise(self, n_jobs=-1):
+        if self.exists("strainclusters.sav"): return self.load("strainclusters.sav")
+
         kwargs = dict(
             num_points=self.num_points,
             umap_params=self.umap_params,
@@ -140,6 +146,8 @@ class BehaviourPipeline:
         return templates, clustering
 
     def pool(self):
+        if self.exists("dataset.sav"): return self.load("dataset.sav")
+
         templates, clustering = self.load("strainclusters.sav")
         
         # filter strain clusters
@@ -162,6 +170,8 @@ class BehaviourPipeline:
         return templates, clustering
     
     def train(self):
+        if self.exists("classifier.sav"): return self.load("classifier.sav")
+
         templates, clustering = self.load("dataset.sav")
         clf = CatBoostClassifier(**self.clf_params)
         clf.fit(templates, clustering["soft_labels"])
@@ -176,3 +186,6 @@ class BehaviourPipeline:
         with open(os.path.join(self.base_dir, f), "rb") as fname:
             data = joblib.load(fname)
         return data
+    
+    def exists(self, f):
+        return os.path.exists(os.path.join(self.base_dir, f))
