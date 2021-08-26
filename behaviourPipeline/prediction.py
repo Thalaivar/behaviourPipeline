@@ -90,6 +90,8 @@ def frames_for_bouts(video, locs):
     video = cv2.VideoCapture(video)
     fps = int(video.get(cv2.CAP_PROP_FPS))
 
+    video = trim_data(video, fps, isvideo=True)
+    
     idx, frames = 0, []
     
     success, image = video.read()  
