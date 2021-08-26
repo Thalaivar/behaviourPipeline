@@ -95,7 +95,7 @@ def frames_for_bouts(video, locs):
     idx, frames = 0, []
     
     success, image = video.read()  
-    while success:
+    while success and locs:
         if idx == locs[0].start:
             while idx <= locs[0].end:
                 frames.append(image)
