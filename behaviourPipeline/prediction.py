@@ -1,11 +1,9 @@
 import os
 import cv2
 import h5py
-import random
 import numpy as np
 from collections import namedtuple
 
-from numpy.core.fromnumeric import clip
 from behaviourPipeline.data import process_h5py_data, bsoid_format
 from behaviourPipeline.preprocessing import likelihood_filter, trim_data
 from behaviourPipeline.features import extract_comb_feats, aggregate_features
@@ -88,6 +86,7 @@ def bouts_from_video(behaviour_idx, labels, min_bout_len, n_examples):
     return locs[:n_examples]
 
 def frames_for_bouts(video, locs):
+    if not locs: return []
     locs.sort(key=lambda x: x.start)
 
     video = cv2.VideoCapture(video)
