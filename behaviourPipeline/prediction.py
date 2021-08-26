@@ -6,12 +6,30 @@ import numpy as np
 from collections import namedtuple
 
 from behaviourPipeline.data import process_h5py_data, bsoid_format
-from behaviourPipeline.preprocessing import likelihood_filter, trim_data
+from behaviourPipeline.preprocessing import likelihood_filter
 from behaviourPipeline.features import extract_comb_feats, aggregate_features
 
 import logging
 logger = logging.getLogger(__name__)
 
+def trim_video_data(data, fps, isvideo=False):
+    # remove first and last 5 mins
+    end_trim = 5 * 60 * fps
+    if isvideo:
+        success, _ = data.read()
+        for _ in range(end_trim):
+            if not success: break
+            success, _ = data.read()
+        return data
+        
+    data = data[end_trim:-end_trim]
+    
+    # consider only first 50 mins
+    clip = 50 * 60 * fps
+    data = data[:clip+1]
+    
+    return data
+        
 def extract_data_from_video(video_file, bodyparts, fps, conf_threshold, filter_thresh):
     # get keypoint data from video file
     conf, pos = process_h5py_data(h5py.File(video_file, 'r'))
@@ -20,7 +38,7 @@ def extract_data_from_video(video_file, bodyparts, fps, conf_threshold, filter_t
 
     if perc_filt > filter_thresh: logger.warning(f"% data filtered from {os.path.split(video_file)[-1]} too high ({perc_filt}%)")
     for key, data in fdata.items():
-        fdata[key] = trim_data(data, fps)
+        fdata[key] = trim_video_data(data, fps)
     
     return fdata
 
@@ -90,7 +108,7 @@ def frames_for_bouts(video, locs):
     video = cv2.VideoCapture(video)
     fps = int(video.get(cv2.CAP_PROP_FPS))
 
-    video = trim_data(video, fps, isvideo=True)
+    video = trim_video_data(video, fps, isvideo=True)
     
     idx, frames = 0, []
     
