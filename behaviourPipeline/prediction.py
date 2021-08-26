@@ -112,15 +112,13 @@ def frames_for_bouts(video, locs):
     return frames
                 
 
-def behaviour_clips(behaviour_idx, video_dirs, min_bout_len, fps, n_examples, clf, stride_window, bodyparts, conf_threshold, filter_thresh):
+def behaviour_clips(behaviour_idx, videos, min_bout_len, fps, n_examples, clf, stride_window, bodyparts, conf_threshold, filter_thresh):
     min_bout_len = fps * min_bout_len // 1000
     clip_frames = []
     
-    for video_dir in video_dirs:
-        video_file = [os.path.join(video_dir, f) for f in os.listdir(video_dir) if f.endswith(".h5")][0]
+    for video_file, video_name in videos:
         labels = video_frame_predictions(video_file, clf, stride_window, bodyparts, fps, conf_threshold, filter_thresh)
-        locs = bouts_from_video(behaviour_idx, labels, min_bout_len, n_examples)
-        video_name = [os.path.join(video_dir, f) for f in os.listdir(video_dir) if f.endswith(".avi")][0]
+        locs = bouts_from_video(behaviour_idx, labels, min_bout_len, n_examples)    
         clip_frames.append(frames_for_bouts(video_name, locs))
     
     return clip_frames
