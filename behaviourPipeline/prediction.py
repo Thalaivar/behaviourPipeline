@@ -117,6 +117,6 @@ def behaviour_clips(behaviour_idx, videos, min_bout_len, fps, n_examples, clf, s
     for video_file, video_name in videos:
         labels = video_frame_predictions(video_file, clf, stride_window, bodyparts, fps, conf_threshold, filter_thresh)
         locs = bouts_from_video(behaviour_idx, labels, min_bout_len, n_examples)    
-        clip_frames.append(frames_for_bouts(video_name, locs))
+        clip_frames.extend(frames_for_bouts(video_name, locs))
     
     return clip_frames
