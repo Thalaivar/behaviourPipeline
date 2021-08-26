@@ -6,7 +6,6 @@ import numpy as np
 from collections import namedtuple
 
 from numpy.core.fromnumeric import clip
-from behaviourPipeline.pipeline import BehaviourPipeline
 from behaviourPipeline.data import process_h5py_data, bsoid_format
 from behaviourPipeline.preprocessing import likelihood_filter, trim_data
 from behaviourPipeline.features import extract_comb_feats, aggregate_features
