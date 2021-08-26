@@ -179,7 +179,7 @@ class BehaviourPipeline:
         random.shuffle(video_dirs)
 
         j = 0
-        for i in range(n, len(video_dirs), n):
+        for i in tqdm(range(n, len(video_dirs), n)):
             clip_frames =  behaviour_clips(
                 j, 
                 video_dirs[i-n:i], 
