@@ -110,7 +110,7 @@ def filter_strain_clusters(feats: dict, clustering: dict, thresh: float, use_exe
     clusters = defaultdict(list)
     for strain in feats.keys():
         # extract labels for strain
-        class_labels = clustering[strain]["soft_labels"], 
+        class_labels = clustering[strain]["soft_labels"]
 
         # threshold by entropy
         class_ids, _ = np.unique(class_labels, return_counts=True)
