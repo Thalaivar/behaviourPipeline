@@ -177,9 +177,9 @@ class BehaviourPipeline:
         if n < 1: raise ValueError("need more videos to have at least one unique video per behaviour")
         random.shuffle(video_dirs)
 
-        def make_clips(j, videos, **kwargs):
+        def make_clips(j, videos, outdir, **kwargs):
             clip_frames = behaviour_clips(j, videos, **kwargs)
-            videomaker(clip_frames, kwargs["fps"], os.path.join(kwargs["outdir"], f"behaviour_{j}.mp4"))
+            videomaker(clip_frames, kwargs["fps"], os.path.join(outdir, f"behaviour_{j}.mp4"))
 
         kwargs = dict(
             min_bout_len=min_bout_len,
@@ -192,7 +192,7 @@ class BehaviourPipeline:
             filter_thresh=self.filter_thresh
         )
         Parallel(n_jobs=psutil.cpu_count(logical=False))(
-            delayed(make_clips)(j, video_dirs[i-n:i], **kwargs) 
+            delayed(make_clips)(j, video_dirs[i-n:i], outdir, **kwargs) 
             for i, j in zip(tqdm(range(n, len(video_dirs), n)), range(max_label+1))
         )
         
