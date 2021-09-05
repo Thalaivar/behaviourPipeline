@@ -92,11 +92,14 @@ def bouts_from_video(behaviour_idx, labels, min_bout_len, n_examples):
     while i < len(labels) - 1:
         i += 1
         
-        if i != behaviour_idx: continue
+        if labels[i] != behaviour_idx: 
+            i += 1
+            continue
         
         j = i + 1
         while j < len(labels) - 1 and labels[i] == labels[j]: j += 1
         if j - i >= min_bout_len: locs.append(Bout(i, j-1))
+        i = j
     
     locs.sort(key=lambda x: x.start - x.end)
     return locs[:n_examples]
