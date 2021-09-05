@@ -1,6 +1,7 @@
 import os
 import ray
 import yaml
+import shutil
 import psutil
 import joblib
 import random
@@ -45,6 +46,8 @@ class BehaviourPipeline:
         self.clf_params     = config["clf_params"] 
         try: os.mkdir(self.base_dir)
         except FileExistsError: pass
+
+        shutil.copyfile(config, os.path.join(self.base_dir, config))
         
     def ingest_data(self, data_dir: str, records: pd.DataFrame, n: int, n_strains: int=-1, n_jobs: int=-1):
         if self.exists("strains.sav"): return self.load("strains.sav")
@@ -203,23 +206,6 @@ class BehaviourPipeline:
             delayed(make_clips)(j, video_dirs[i-n:i], outdir, **kwargs) 
             for i, j in zip(tqdm(range(n, len(video_dirs), n)), range(max_label+1))
         )
-        
-        # j = 0
-        # for i in tqdm(range(n, len(video_dirs), n)):
-        #     clip_frames =  behaviour_clips(
-        #         j, 
-        #         video_dirs[i-n:i], 
-        #         min_bout_len, 
-        #         self.fps, 
-        #         n_examples, 
-        #         clf, 
-        #         self.stride_window,
-        #         self.bodyparts,
-        #         self.conf_threshold,
-        #         self.filter_thresh
-        #     )
-        #     videomaker(clip_frames, self.fps, os.path.join(outdir, f"behaviour_{j}.mp4"))
-        #     j += 1
 
     def save_to_cache(self, data, f):
         with open(os.path.join(self.base_dir, f), "wb") as fname:
