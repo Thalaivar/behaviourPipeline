@@ -20,8 +20,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 class BehaviourPipeline:
-    def __init__(self, pipelinename:str, config: str):
-        with open(config, 'r') as f:
+    def __init__(self, pipelinename:str, configfile: str):
+        with open(configfile, 'r') as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
 
         self.pipelinename     = pipelinename
@@ -47,7 +47,7 @@ class BehaviourPipeline:
         try: os.mkdir(self.base_dir)
         except FileExistsError: pass
 
-        shutil.copyfile(config, os.path.join(self.base_dir, config))
+        shutil.copyfile(config, os.path.join(self.base_dir, configfile))
         
     def ingest_data(self, data_dir: str, records: pd.DataFrame, n: int, n_strains: int=-1, n_jobs: int=-1):
         if self.exists("strains.sav"): return self.load("strains.sav")
