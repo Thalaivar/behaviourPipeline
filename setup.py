@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='behaviourPipeline',
-    version='0.1.3',
+    version='0.2.12',
     author='Dhruv Laad',
     author_email='dhruvlaad@gmail.com',
     packages=['behaviourPipeline'],
@@ -14,6 +14,11 @@ setup(
        "catboost",
        "pyyaml",
        "joblib",
-       "scikit-learn"
+       "scikit_learn",
+       "opencv_python", 
+       "ffmpeg_python",
+       "tqdm",
+       "seaborn",
+       "h5py"
     ],
 )

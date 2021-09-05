@@ -1,8 +1,8 @@
 import os
-import joblib
 import ray
 import yaml
 import psutil
+import joblib
 import random
 import pandas as pd
 import numpy as np
@@ -13,6 +13,7 @@ from joblib import Parallel, delayed
 from catboost import CatBoostClassifier
 from behaviourPipeline.preprocessing import filter_strain_data, trim_data
 from behaviourPipeline.features import extract_comb_feats, aggregate_features
+from behaviourPipeline.prediction import behaviour_clips, videomaker
 
 import logging
 logger = logging.getLogger(__name__)
@@ -50,7 +51,7 @@ class BehaviourPipeline:
 
         min_video_len = self.min_video_len * self.fps * 60
         
-        n_jobs = min(n_jobs, psutil.cpu_count(logical=False))
+        n_jobs = min(n_jobs, psutil.cpu_count(logical=False)) if n_jobs > 0 else psutil.cpu_count(logical=False)
         filtered_data = Parallel(n_jobs)(
             delayed(filter_strain_data)(
                 df,
@@ -83,9 +84,7 @@ class BehaviourPipeline:
         return filtered_data
 
     def compute_features(self, n_jobs: int=-1):
-        if self.exists("features.sav"): return self.load("features.sav")
-        
-        n_jobs = min(n_jobs, psutil.cpu_count(logical=False))
+        n_jobs = min(n_jobs, psutil.cpu_count(logical=False)) if n_jobs > 0 else psutil.cpu_count(logical=False)
 
         filtered_data = self.load("strains.sav")
         logger.info(f'extracting features from {len(filtered_data)} strains')
@@ -177,7 +176,51 @@ class BehaviourPipeline:
         clf.fit(templates, clustering["soft_labels"])
         self.save_to_cache(clf, "classifier.sav")
         return clf
+    
+    def create_example_videos(self, video_dirs: list, min_bout_len: int, n_examples: int, outdir: str):
+        clf = self.load("classifier.sav")
+        max_label = clf.classes_.max()
+
+        n = len(video_dirs) // (max_label + 1)
+        if n < 1: raise ValueError("need more videos to have at least one unique video per behaviour")
+        random.shuffle(video_dirs)
+
+        def make_clips(j, videos, outdir, **kwargs):
+            clip_frames = behaviour_clips(j, videos, **kwargs)
+            videomaker(clip_frames, kwargs["fps"], os.path.join(outdir, f"behaviour_{j}.mp4"))
+
+        kwargs = dict(
+            min_bout_len=min_bout_len,
+            fps=self.fps,
+            n_examples=n_examples,
+            clf=clf,
+            stride_window=self.stride_window,
+            bodyparts=self.bodyparts,
+            conf_threshold=self.conf_threshold,
+            filter_thresh=self.filter_thresh
+        )
+        Parallel(n_jobs=psutil.cpu_count(logical=False))(
+            delayed(make_clips)(j, video_dirs[i-n:i], outdir, **kwargs) 
+            for i, j in zip(tqdm(range(n, len(video_dirs), n)), range(max_label+1))
+        )
         
+        # j = 0
+        # for i in tqdm(range(n, len(video_dirs), n)):
+        #     clip_frames =  behaviour_clips(
+        #         j, 
+        #         video_dirs[i-n:i], 
+        #         min_bout_len, 
+        #         self.fps, 
+        #         n_examples, 
+        #         clf, 
+        #         self.stride_window,
+        #         self.bodyparts,
+        #         self.conf_threshold,
+        #         self.filter_thresh
+        #     )
+        #     videomaker(clip_frames, self.fps, os.path.join(outdir, f"behaviour_{j}.mp4"))
+        #     j += 1
+
     def save_to_cache(self, data, f):
         with open(os.path.join(self.base_dir, f), "wb") as fname:
             joblib.dump(data, fname)
