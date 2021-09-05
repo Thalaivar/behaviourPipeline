@@ -49,7 +49,7 @@ class BehaviourPipeline:
     def ingest_data(self, data_dir: str, records: pd.DataFrame, n: int, n_strains: int=-1, n_jobs: int=-1):
         min_video_len = self.min_video_len * self.fps * 60
         
-        n_jobs = min(n_jobs, psutil.cpu_count(logical=False))
+        n_jobs = min(n_jobs, psutil.cpu_count(logical=False)) if n_jobs > 0 else psutil.cpu_count(logical=False)
         filtered_data = Parallel(n_jobs)(
             delayed(filter_strain_data)(
                 df,
@@ -82,7 +82,7 @@ class BehaviourPipeline:
         return filtered_data
 
     def compute_features(self, n_jobs: int=-1):
-        n_jobs = min(n_jobs, psutil.cpu_count(logical=False))
+        n_jobs = min(n_jobs, psutil.cpu_count(logical=False)) if n_jobs > 0 else psutil.cpu_count(logical=False)
 
         filtered_data = self.load("strains.sav")
         logger.info(f'extracting features from {len(filtered_data)} strains')
