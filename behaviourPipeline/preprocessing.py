@@ -85,9 +85,9 @@ def likelihood_filter(data, conf_threshold, bodyparts):
     perc_filt = points_filtered_by_idx.max()    
     return {'conf': conf, 'x': filt_x, 'y': filt_y}, perc_filt * 100 / N
 
-def trim_data(fdata, fps, isvideo=False):
+def trim_data(fdata, fps, clip_len, end_trim, isvideo=False):
         # remove first and last 5 mins
-        end_trim = 5 * 60 * fps
+        end_trim = end_trim * 60 * fps
         if isvideo:
             success, _ = fdata.read()
             for _ in range(end_trim):
@@ -98,8 +98,8 @@ def trim_data(fdata, fps, isvideo=False):
         fdata = fdata[end_trim:-end_trim]
         
         # consider only first 10 mins
-        clip = 10 * 60 * fps
-        fdata = fdata[:clip+1]
+        clip_len = clip_len * 60 * fps
+        fdata = fdata[:clip_len+1]
         
         return fdata
 

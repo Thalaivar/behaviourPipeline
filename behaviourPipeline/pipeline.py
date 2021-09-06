@@ -35,6 +35,9 @@ class BehaviourPipeline:
         self.filter_thresh  = config["filter_thresh"]
         self.min_video_len  = config["min_video_len"]
         
+        self.end_trim = config["end_trim"]
+        self.clip_len = config["clip_len"]
+
         self.hdbscan_params = config["hdbscan_params"]
         self.umap_params    = config["umap_params"]
         self.cluster_range  = config["cluster_range"]
@@ -49,7 +52,7 @@ class BehaviourPipeline:
 
         if not os.path.exists(os.path.join(self.base_dir, "config.yaml")):
             shutil.copyfile(configfile, os.path.join(self.base_dir, configfile))
-        
+
     def ingest_data(self, data_dir: str, records: pd.DataFrame, n: int, n_strains: int=-1, n_jobs: int=-1):
         if self.exists("strains.sav"): return self.load("strains.sav")
 
@@ -78,7 +81,7 @@ class BehaviourPipeline:
         for strain, animal_data in filtered_data.items():
             for i, fdata in enumerate(animal_data):
                 for key, data in fdata.items():
-                    fdata[key] = trim_data(data, self.fps)
+                    fdata[key] = trim_data(data, self.fps, self.clip_len, self.end_trim)
                 animal_data[i] = fdata
             filtered_data[strain] = animal_data
 
