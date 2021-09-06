@@ -47,7 +47,8 @@ class BehaviourPipeline:
         try: os.mkdir(self.base_dir)
         except FileExistsError: pass
 
-        shutil.copyfile(configfile, os.path.join(self.base_dir, configfile))
+        if not os.path.exists(os.path.join(self.base_dir, "config.yaml")):
+            shutil.copyfile(configfile, os.path.join(self.base_dir, configfile))
         
     def ingest_data(self, data_dir: str, records: pd.DataFrame, n: int, n_strains: int=-1, n_jobs: int=-1):
         if self.exists("strains.sav"): return self.load("strains.sav")
