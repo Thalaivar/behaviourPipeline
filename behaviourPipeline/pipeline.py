@@ -184,7 +184,9 @@ class BehaviourPipeline:
         self.save_to_cache(clf, "classifier.sav")
         return clf
     
-    def create_example_videos(self, video_dirs: list, min_bout_len: int, n_examples: int, outdir: str):
+    def create_example_videos(self, video_dirs: list, min_bout_len: int, n_examples: int, outdir: str, n_jobs: int=-1):
+        n_jobs = min(n_jobs, psutil.cpu_count(logical=False)) if n_jobs > 0 else psutil.cpu_count(logical=False)
+
         clf = self.load("classifier.sav")
         max_label = clf.classes_.max()
 
@@ -206,7 +208,7 @@ class BehaviourPipeline:
             conf_threshold=self.conf_threshold,
             filter_thresh=self.filter_thresh
         )
-        Parallel(n_jobs=psutil.cpu_count(logical=False))(
+        Parallel(n_jobs=n_jobs)(
             delayed(make_clips)(j, video_dirs[i-n:i], outdir, **kwargs) 
             for i, j in zip(tqdm(range(n, len(video_dirs), n)), range(max_label+1))
         )
