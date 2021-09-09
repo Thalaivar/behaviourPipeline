@@ -57,6 +57,8 @@ def video_frame_predictions(video_file, clf, stride_window, bodyparts, fps, conf
     return labels
 
 def videomaker(frames, fps, outfile):
+    if not frames: return
+    
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     height, width, _ = frames[0].shape
 
