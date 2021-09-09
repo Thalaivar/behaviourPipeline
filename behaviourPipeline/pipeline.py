@@ -210,7 +210,7 @@ class BehaviourPipeline:
         )
         Parallel(n_jobs=n_jobs)(
             delayed(make_clips)(j, video_dirs[i-n:i], outdir, **kwargs) 
-            for i, j in zip(tqdm(range(n, len(video_dirs), n)), range(max_label+1))
+            for i, j in zip(range(n, len(video_dirs), n), tqdm(range(max_label+1)))
         )
 
     def save_to_cache(self, data, f):
