@@ -47,7 +47,7 @@ def extract_comb_feats(filtered_data: dict, fps: int):
         - filtered_data : preprocessed keypoint data with keys ['x', 'y'] for x and y coordinates of each keypoint
         - fps           : frames-per-second  
     Outputs:
-        - feats : ( N x 3 * Dc2 + D ) array of geometric features where D is no. of. keypoints
+        - feats : ( N x (3 * Dc2 + D) ) array of geometric features where D is no. of. keypoints
     """
     x, y = filtered_data['x'], filtered_data['y']
     assert x.shape == y.shape
