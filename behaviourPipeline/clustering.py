@@ -29,7 +29,7 @@ def cluster_data(embedding, cluster_range, **hdbscan_params):
         min_cluster_range = np.linspace(*cluster_range)
         
     for min_c in min_cluster_range:
-        trained_classifier = hdbscan.HDBSCAN(min_cluster_size=min(int(round(min_c * 0.01 * embedding.shape[0])), 5),
+        trained_classifier = hdbscan.HDBSCAN(min_cluster_size=max(int(round(min_c * 0.01 * embedding.shape[0])), 5),
                                             **hdbscan_params).fit(embedding)
         
         labels = trained_classifier.labels_
